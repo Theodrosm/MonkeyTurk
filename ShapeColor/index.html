@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="jquery-1.7.1.js"></script>
+    <title>Object Oriented ShapeColor Task</title>
+</head>
+<body style="margin:0px;">
+<canvas id="myCanvas"></canvas>
+<!--Functions and Classes-->
+<script type="text/javascript">
+    // ========== Miscellaneous helper functions ========== 
+    // Find a value in an array
+    Array.prototype.inArray = function inArray(value){
+        for(i = 0; i < this.length; i++){
+            if(this[i] === value){
+                return true;
+            }
+        }
+        return false;
+    }
+    // Initialize an empty 2D array
+    function Create2DArray(rows) {
+        var arr = [];
+        for (var i=0;i<rows;i++) {
+            arr[i] = [];
+        }
+        return arr;
+    }
+    // Load an array of images
+    function preload(arrayOfImages) {
+        $(arrayOfImages).each(function () {
+            var id = this.split('\\');
+            id = id[id.length-1].split('.');
+            id = id[0];
+            $('<img >').attr('src',this).attr('id',id).appendTo('body').css('display','none');
+        });
+    }
+    
+    // ========== Task related classes ========== 
+    // Class containing all Monkey information
+    class RewardMode{
+        constructor(name, juiceAmount){
+            this.name = name // name of monkey
+            this.juiceAmount = juiceAmount; // in mL per trial
+        }
+    }
+    
+    // Class containing all Frame information
+    class Frame{
+        constructor(bgColor, grid){
+            this.bgColor = // RGB triplet of background color
+                'rgb('+bgColor[0]+','+bgColor[1]+','+bgColor[2]+')';
+                
+            // subtracted the pixel width of a scroll bar so none show up on the screen
+            // theres probably a better way to do this
+            // height of the current window
+            this.height = document.documentElement.clientHeight-34;
+            // width of the current window
+            this.width = document.documentElement.clientWidth-34;
+            this.cellHeight = this.height/(grid[0]+2); // height of a grid cell
+            this.cellWidth = this.width/(grid[1]+2);  // width of a grid cell
+            // square resize dimensions of stimulus for this grid
+            this.stimDim = Math.min(this.cellHeight, this.cellWidth);
+            
+            this.gridCoord = Create2DArray(grid[0]);
+            var counter=0;
+            for(var i=0;i<grid[0];i++){
+                for(var j=0;j<grid[1];j++){
+                    // set x,y centers of grid cells
+                    this.gridCoord[counter] = 
+                        [Math.floor((j+1)*this.cellWidth+this.cellWidth/2)
+                        ,Math.floor((i+1)*this.cellHeight+this.cellHeight/2)];
+                    counter++;
+                }
+            }
+        }
+        populateFrame(stims,locs){
+            if(stims.length != locs.length){
+                return false;
+            }
+            this.stims = stims;
+            this.locs = locs;
+        }
+        showFrame(){
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            document.body.style.backgroundColor = this.bgColor;
+            for(var i=0;i<this.stims.length;i++){
+                var img = document.getElementById(this.stims[i].id.toString());
+                ctx.drawImage(img,(this.gridCoord[this.locs[i]][0]-this.stimDim/2)
+                                 ,(this.gridCoord[this.locs[i]][1]-this.stimDim/2)
+                                 ,this.stimDim,this.stimDim);
+                console.log('drawing stim '+stims[i].id.toString());
+            }
+            console.log('frame shown');
+        }
+        showFramedebug(){
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            document.body.style.backgroundColor = this.bgColor;
+            ctx.beginPath();
+            ctx.lineWidth="1";
+            ctx.strokeStyle="red";
+            for (var i=0;i<this.gridCoord.length;i++){
+                //console.log(this.gridCoord[i]);
+                ctx.rect(this.gridCoord[i][0]-this.stimDim/2
+                        ,this.gridCoord[i][1]-this.stimDim/2
+                        ,this.stimDim,this.stimDim);
+            }
+            ctx.stroke();
+        }
+    }
+    
+    // Class containing all stimulus information
+    class Stimulus{
+        constructor(id, focalColor, gaussian, luminance, chromaticity){
+            this.id = id;
+            this.filepath = '.\\Imgs\\'+id+'.png';
+            this.focalColor = focalColor;
+            this.gaussian = gaussian;
+            this.luminance = luminance;
+            this.chromaticity = chromaticity;
+        }
+        setFillColor(){
+            //calculate fill color based on this stimulus object's gauss, lum, chrom, etc
+            //this.fillColor=fillColor;
+        }
+    }
+    
+    // Class containing all single trial information
+    class Trial{
+        constructor(frames, order){
+            this.frames = frames;
+            this.order = order;
+        }
+        runTrial(){
+            this.displayTime=[];
+            this.responseTime=[];
+        }
+        //Correct or incorrect
+    }
+    
+    // Listen for mouse click event
+    document.addEventListener("click", function(){
+        document.getElementById("myCanvas").innerHTML = "Hello World";
+        stimFrame.showFrame();
+        //Correct stim location
+        //Onset time
+        //Touch location
+        //Touch time
+        //Answered correctly (yes/no)
+    });
+</script>
+
+<!--Load Variables and Settings files-->
+<script src="Settings/variables.js" type="text/javascript">// variables</script>
+<script src="Settings/StimSet_all.js" type="text/javascript">// stimfile</script>
+
+<!--Main Loop Code-->
+<script type="text/javascript">
+    // Initialize images based on loaded stim list
+    var imgList = [];
+    for(i=0;i<stims.length;i++){
+        imgList.push('.\\Imgs\\'+stims[i].id+'.png');
+    }
+    preload(imgList);
+    
+    // Setup Canvas
+    var c=document.getElementById("myCanvas");
+    var ctx=c.getContext("2d");
+    // subtracted the pixel width of a scroll bar so none show up on the screen
+    // theres probably a better way to do this
+    ctx.canvas.width  = document.documentElement.clientWidth-34;
+    ctx.canvas.height = document.documentElement.clientHeight-34;
+    
+    // Example Trial
+    var fixFrame = new Frame([159,131,154],[3,3]);
+    var stimFrame = new Frame([159,131,154],[3,3]);
+    var testFrame = new Frame([159,131,154],[3,3]);
+    stimFrame.showFramedebug();
+    
+    fixFrame.populateFrame([stims[stims.length-1]],[7]);
+    stimFrame.populateFrame([stims[10]],[4]);
+    testFrame.populateFrame([stims[10], stims[19]],[3,5]);
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
